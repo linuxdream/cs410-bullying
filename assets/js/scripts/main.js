@@ -56,6 +56,20 @@ $(document).ready(function () {
         });
     });
 
+    //Bind the search bar to the FB search
+    $('#fbaccount').autocomplete({
+        source: function(request, response){
+            searchFBAccounts(request.term, function(data){
+                console.log('fb seasrch data', data);
+                response(data);
+            });
+        },
+        minLength: 3,
+        select: function(event, ui){
+            console.log(ui.item);
+        }
+    })
+
 
     /**
      * Helper functions
@@ -64,12 +78,12 @@ $(document).ready(function () {
         $('#fbaccount').attr('disabled', false);
     }
 
-    function searchFBAccounts(searchString){
+    function searchFBAccounts(searchString, cb){
         if(searchString && searchString.length > 2){
             FB.api('/search/', {
-                type: 'page',
+                type: 'user',
                 limit: 10,
-                fields: 'id,name,location,category,link',
+                fields: 'id,name,location,picture,link',
                 q: searchString
             }, function (response) {
                 var cleanResponses = [];
@@ -81,13 +95,14 @@ $(document).ready(function () {
 
                     location = _.compact(location).join(', ');
 
-                    cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
+                    // cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
+                    cleanResponses.push(r.name + ', ' + location + ' - ' + r.link)
                 });
 
-                return cleanResponses;
+                cb(cleanResponses);
             });
         }else{
-            return [];
+            return cb([]);
         }
     }
 });
