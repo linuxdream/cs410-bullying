@@ -51,7 +51,7 @@ $(document).ready(function () {
                             type: 'error'
                         });
                     }
-                }, {scope: 'email'});
+                }, {scope: ['email', 'user_friends']});
             }
         });
     });
@@ -66,7 +66,7 @@ $(document).ready(function () {
         },
         minLength: 3,
         select: function(event, ui){
-            console.log(ui.item);
+            $('#fbaccount').val(ui.item.name + ' - ' + ui.item.id);
         }
     })
     .autocomplete("instance")
@@ -88,21 +88,24 @@ $(document).ready(function () {
         if(searchString && searchString.length > 2){
             FB.api('/search/', {
                 type: 'user',
-                limit: 5,
+                limit: 30,
                 fields: 'id,name,picture,link',
                 q: searchString
             }, function (response) {
+                if(_.has(response, 'error')){
+                    new PNotify({
+                        title: 'Error',
+                        text: 'Cannot search Facebook using that query',
+                        type: 'error'
+                    });
+                    return [];
+                }
+
                 var cleanResponses = [];
 
                 _.each(response.data, function (r) {
-                    var location = [];
-                    location.push(_.get(r, 'location.city', null));
-                    location.push(_.get(r, 'location.state', null));
-
-                    location = _.compact(location).join(', ');
-
                     // cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
-                    cleanResponses.push({image: r.picture.data.url, name: r.name})
+                    cleanResponses.push({image: r.picture.data.url, name: r.name, id: r.id})
                 });
 
                 cb(cleanResponses);
