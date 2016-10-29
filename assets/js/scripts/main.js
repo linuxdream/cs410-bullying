@@ -69,6 +69,12 @@ $(document).ready(function () {
             console.log(ui.item);
         }
     })
+    .autocomplete("instance")
+    ._renderItem = function(ul, item){
+        return $('<li>')
+            .append('<img src="' + item.image + '">' + item.name)
+            .appendTo(ul);
+    };
 
 
     /**
@@ -82,8 +88,8 @@ $(document).ready(function () {
         if(searchString && searchString.length > 2){
             FB.api('/search/', {
                 type: 'user',
-                limit: 10,
-                fields: 'id,name,location,picture,link',
+                limit: 5,
+                fields: 'id,name,picture,link',
                 q: searchString
             }, function (response) {
                 var cleanResponses = [];
@@ -96,7 +102,7 @@ $(document).ready(function () {
                     location = _.compact(location).join(', ');
 
                     // cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
-                    cleanResponses.push(r.name + ', ' + location + ' - ' + r.link)
+                    cleanResponses.push({image: r.picture.data.url, name: r.name})
                 });
 
                 cb(cleanResponses);
