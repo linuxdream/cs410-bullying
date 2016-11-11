@@ -31,6 +31,7 @@ rs.on('end', function(){
     parseXML(data, function(err, result){
         //Loop through the FORMSPRINGID array.
         result.dataset.FORMSPRINGID.forEach(function(formspring){
+            //Loop through the nested POSTs.
             formspring.POST.forEach(function(post){
                 //Set a bullying flag so we know when a post contains bullying
                 let bullyingFound = false;
