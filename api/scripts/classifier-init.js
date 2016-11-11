@@ -49,6 +49,8 @@ rs.on('end', function(){
                 //If this post has bullying, we tokenize and stem the text then mark it as a bullying category and add it to the classifier.
                 if(bullyingFound){
                     Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(post.TEXT[0].substring(3)), 'bullying');
+                }else{
+                    Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(post.TEXT[0].substring(3)), 'non-bullying');
                 }
             });
         });
