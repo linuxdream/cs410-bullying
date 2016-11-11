@@ -1,6 +1,8 @@
-# bullying-api
+# Social Media Bullying Application
 
-## Setup
+## API
+
+### Setup
 Be sure you have at least node 4.0+. Ideally, 7+ would be best.
 
 Set the following environment variable:
