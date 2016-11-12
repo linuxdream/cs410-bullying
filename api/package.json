@@ -5,6 +5,8 @@
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
+    "async": "^2.1.2",
+    "cheerio": "^0.22.0",
     "ejs": "2.3.4",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
@@ -23,6 +25,7 @@
     "lodash": "^4.16.6",
     "natural": "^0.4.0",
     "rc": "1.0.1",
+    "request": "^2.78.0",
     "sails": "~0.12.9",
     "sails-disk": "~0.10.9",
     "xml2js": "^0.4.17"

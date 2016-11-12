@@ -29,42 +29,66 @@ rs.on('data', function(chunk){
 rs.on('end', function(){
     //Init the parser on the XML contents.
     parseXML(data, function(err, result){
-        //Loop through the FORMSPRINGID array.
-        result.dataset.FORMSPRINGID.forEach(function(formspring){
-            //Loop through the nested POSTs.
-            formspring.POST.forEach(function(post){
-                //Set a bullying flag so we know when a post contains bullying
-                let bullyingFound = false;
+        if(err){
+            process.exit(err);
+        }
 
-                //Loop through the LABELDATA as that contains the analysis
-                post.LABELDATA.forEach(function(answer){
-                    //Are any of them marked as containing bullying text?
-                    if(answer.SEVERITY[0] > 0){
-                        //If so, then flag it
-                        bullyingFound = true;
-                    }
-
-                });
-
-                //If this post has bullying, we tokenize and stem the text then mark it as a bullying category and add it to the classifier.
-                if(bullyingFound){
-                    Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(post.TEXT[0].substring(3)), 'bullying');
-                }else{
-                    Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(post.TEXT[0].substring(3)), 'non-bullying');
-                }
-            });
-        });
-
-        //Start the classifier training...
-        Classifier.train();
-
-        //Save it so we can use it when requests come in from the FE.
-        Classifier.save('data/classifier.json', function(err, classifier){
+        //Let's replace slang words with their real meaning.
+        fs.readFile('data/slang.json', 'utf8', (err, slang)=>{
             if(err){
                 process.exit(err);
-            }else{
-                process.exit('Classifier successfully ran and saved the output to classifier.json');
             }
+
+            //The slang to normal text array of objects
+            let slangArray = JSON.parse(slang);
+
+            //Loop through the FORMSPRINGID array.
+            result.dataset.FORMSPRINGID.forEach(function(formspring){
+                //Loop through the nested POSTs.
+                formspring.POST.forEach(function(post){
+                    //Set a bullying flag so we know when a post contains bullying
+                    let bullyingFound = false;
+
+                    //Loop through the LABELDATA as that contains the analysis
+                    post.LABELDATA.forEach(function(answer){
+                        //Are any of them marked as containing bullying text?
+                        if(answer.SEVERITY[0] > 0){
+                            //If so, then flag it
+                            bullyingFound = true;
+                        }
+
+                    });
+
+                    let message = post.TEXT[0].substring(3);
+                    let slangPattern = null;
+
+                    _.each(slangArray, (s)=>{
+                        slangPattern = new RegExp('/\w?' + s.slang.replace('*', '\\*').replace('?', '\\?').replace('/', '\\/').replace('|', '\\|') + '\w?/');
+                        if(s.slang.length && message.search(slangPattern) != -1){
+                            message.replace(s.slang, s.words);
+                        }
+                    });
+
+                    //If this post has bullying, we tokenize and stem the text then mark it as a bullying category and add it to the classifier.
+                    if(bullyingFound){
+                        Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(message), 'bullying');
+                    }else{
+                        Classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(message), 'non-bullying');
+                    }
+                });
+            });
+
+            //Start the classifier training...
+            Classifier.train();
+
+            //Save it so we can use it when requests come in from the FE.
+            Classifier.save('data/classifier.json', function(err, classifier){
+                if(err){
+                    process.exit(err);
+                }else{
+                    process.exit('Classifier successfully ran and saved the output to classifier.json');
+                }
+            });
         });
     });
 });
