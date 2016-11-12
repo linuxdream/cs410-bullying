@@ -5,6 +5,7 @@
  * @description :: Server-side logic for managing nlps
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
+let async = require('async');
 let Natural = require('natural');
 
 module.exports = {
@@ -22,7 +23,8 @@ module.exports = {
             //Setup the results
             let commentResults = {
                 total: 0,
-                totalBullying: 0
+                totalBullying: 0,
+                results: []
             };
 
             //Temp token holder
@@ -36,19 +38,33 @@ module.exports = {
                 let tokenizedComment = [];
 
                 //Loop through the comments
-                comments.forEach((comment) => {
+                async.each(comments, function(comment, callback) {
                     tokenizedComment = Natural.PorterStemmer.tokenizeAndStem(comment);
 
-                    if(classifier.classify(tokenizedComment) === 'bullying'){
+                    let res = false;
+                    if(classifier.classify(tokenizedComment) === 'bullying') {
+                        res = true;
                         //Add to bullying count
                         commentResults.totalBullying++;
                     }
 
                     //Increment counter
                     commentResults.total++;
-                });
 
-                return res.jsonx(commentResults);
+                    let classifications = classifier.getClassifications(tokenizedComment);
+                    commentResults.results.push({
+                        comment: comment,
+                        isBully: res,
+                        classifications: classifications
+                    });
+                    callback();
+                }, function (err) {
+                    if (err) {
+                        return res.serverError('Error processing.');
+                    }
+
+                    return res.jsonx(commentResults);
+                });
             });
         }else{
             return res.serverError('No comments passed.');
