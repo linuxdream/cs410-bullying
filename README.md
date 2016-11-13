@@ -53,3 +53,18 @@ The API uses the training classifier data to make an assessment if each comment 
 ```
 
 The API consumer can them make the determination of how to present that to the user.
+
+```http
+PUT /nlp/classify
+```
+
+body
+
+```json
+{
+  "comment": "comment1",
+  "isBully": true
+}
+```
+
+This API could be used to add more document for classification.
