@@ -13,7 +13,7 @@ $(document).ready(function () {
         FB.init({
             //App ID for this project
             appId: '204639986629939',
-            version: 'v2.7'
+            version: 'v2.8'
         });
 
         $('#loginbutton,#feedbutton').removeAttr('disabled');
@@ -66,7 +66,11 @@ $(document).ready(function () {
         },
         minLength: 3,
         select: function(event, ui){
+            $('.selected-account').empty();
+            $('.selected-account').append('<img src="' + ui.item.image + '"><br>' + ui.item.name);
             $('#fbaccount').val(ui.item.name + ' - ' + ui.item.id);
+
+            return false;
         }
     })
     .autocomplete("instance")
@@ -75,6 +79,67 @@ $(document).ready(function () {
             .append('<img src="' + item.image + '">' + item.name)
             .appendTo(ul);
     };
+
+    $('#analyze').on('click', function(){
+        //Get the account info
+        var fbid = $('#fbaccount').val().split(' - ')[1];
+
+        //Make the first request
+        FB.api('/' + fbid + '/', 'get', params, function(response){
+            if(response.error){
+                return cb(response.error.message);
+            }
+
+            if(response.data && response.data.length){
+                account.allResultsLength = account.allResultsLength + response.data.length;
+
+                //Make API request to save
+                ApiRequest.makeRequest('POST', 'parsedata', {data: response.data, parserID: $scope.parser.id, postEndpoint: account.endpoint, source: $scope.parser.source})
+                    .success(function(res){
+                        account.notify.update({text: 'Retrieved and saved '+response.data.length+' posts for a total of '+account.allResultsLength+'. Checking for more results...'});
+                    })
+                    .error(function(res){
+                        return cb('There was a problem with the query parameters and no posts were found.');
+                    });
+
+                //Check for more pages..calls cb()
+                getNextPage(response, account);
+            }else{
+                console.log(response);
+
+                return cb('There was a problem with the query parameters and no posts were found.');
+            }
+
+            function getNextPage(response, account){
+                if(response && response.paging && response.paging.next){
+                    $http.get(response.paging.next)
+                        .then(function (res) {
+                            //Save prev page data
+                            if (res.data && res.data.data) {
+                                account.allResultsLength = account.allResultsLength + res.data.data.length;
+
+                                //Make API request to save
+                                ApiRequest.makeRequest('POST', 'parsedata', {data: res.data.data, parserID: $scope.parser.id, postEndpoint: account.endpoint, source: $scope.parser.source})
+                                    .success(function(d){
+                                        account.notify.update({text: 'Retrieved and saved '+res.data.data.length+' posts for a total of '+account.allResultsLength+'. Checking for more results...'});
+                                        getNextPage(res.data, account);
+                                    })
+                                    .error(function(d){
+                                        console.log('fail', res);
+                                    });
+                            } else {
+                                //Show error
+                                return cb('No data found in subsequent pages.');
+                            }
+                        });
+                }else{
+                    //All done
+                    cb();
+                }
+            }
+            //$http.get(response.paging.previous)
+        });
+    });
 
 
     /**
@@ -100,7 +165,7 @@ $(document).ready(function () {
                     });
                     return [];
                 }
-
+console.log('yoy', response);
                 var cleanResponses = [];
 
                 _.each(response.data, function (r) {

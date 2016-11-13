@@ -800,3 +800,10 @@ body.is-ie #wrapper {
   background:none;
   border: none;
 }
+
+.selected-account {
+    width: 300px;
+    text-align: center;
+    margin: auto;
+    padding-bottom: 20px;
+}
