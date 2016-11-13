@@ -60,7 +60,7 @@ module.exports = {
                     callback();
                 }, function (err) {
                     if (err) {
-                        return res.serverError('Error processing.');
+                        return res.serverError(err);
                     }
 
                     return res.jsonx(commentResults);
@@ -69,5 +69,34 @@ module.exports = {
         }else{
             return res.serverError('No comments passed.');
         }
+    },
+
+    classify: function (req, res) {
+        if (!req.body.comment || !_.has(req.body, 'isBully')) {
+            return res.serverError('Body has to have properties comment and isBully');
+        }
+
+        // read from disk
+        Natural.BayesClassifier.load(process.cwd() + '/scripts/data/classifier.json', null, (err, classifier)=>{
+            if(err){
+                return res.serverError(err);
+            }
+
+            if (req.body.isBully) {
+                classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(req.body.comment), 'bullying');
+            }
+            else {
+                classifier.addDocument(Natural.PorterStemmer.tokenizeAndStem(req.body.comment), 'non-bullying');
+            }
+            
+            // persist to disk
+            classifier.save(process.cwd() + '/scripts/data/classifier.json', function(err){
+                if(err){
+                    return res.serverError(err);
+                }else{
+                    return res.ok('ok');
+                }
+            });
+        });
     }
 };

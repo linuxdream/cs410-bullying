@@ -32,7 +32,9 @@ module.exports.routes = {
    *                                                                          *
    ***************************************************************************/
 
-  'put /nlp/assess': 'NlpController.assess'
+  'put /nlp/assess': 'NlpController.assess',
+
+  'put /nlp/classify': 'NlpController.classify'
 
   /***************************************************************************
    *                                                                          *
