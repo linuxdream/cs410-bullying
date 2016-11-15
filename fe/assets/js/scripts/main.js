@@ -100,7 +100,7 @@ $(document).ready(function () {
             'likes.summary(1)'
         ];
         var params = {
-            since: moment(moment().subtract(50, 'months'), 'YYYY-MM-DD hh:mm A').unix(),
+            since: moment(moment().subtract(6, 'months'), 'YYYY-MM-DD hh:mm A').unix(),
             until: moment(moment(), 'YYYY-MM-DD hh:mm A').unix(),
             limit: 25,
             fields: requestFields.join(',')
@@ -120,7 +120,7 @@ $(document).ready(function () {
             }
 
             if (response.data && response.data.length) {
-                var allPosts = response.data;
+                var allPosts = response.data.data;
 
                 //Check for more pages..calls cb()
                 getNextPage(response, allPosts);
@@ -136,7 +136,7 @@ $(document).ready(function () {
                         .then(function (res) {
                             //Save prev page data
                             if (res.data && res.data.data) {
-                                allPosts.concat(res.data)
+                                allPosts.concat(res.data.data)
 
                                  //Recursive call
                                 getNextPage(res.data, allPosts);
