@@ -120,44 +120,35 @@ $(document).ready(function () {
             }
 
             if (response.data && response.data.length) {
-                account.allResultsLength = account.allResultsLength + response.data.length;
-
+                var allPosts = response.data;
 
                 //Check for more pages..calls cb()
-                //getNextPage(response, account);
+                getNextPage(response, allPosts);
             } else {
                 console.log(response);
 
                 return cb('There was a problem with the query parameters and no posts were found.');
             }
 
-            function getNextPage(response, account) {
+            function getNextPage(response, allPosts) {
                 if (response && response.paging && response.paging.next) {
                     $http.get(response.paging.next)
                         .then(function (res) {
                             //Save prev page data
                             if (res.data && res.data.data) {
-                                account.allResultsLength = account.allResultsLength + res.data.data.length;
+                                allPosts.concat(res.data)
 
-                                //Make API request to save
-                                ApiRequest.makeRequest('POST', 'parsedata', {
-                                        data: res.data.data,
-                                        parserID: $scope.parser.id,
-                                        postEndpoint: account.endpoint,
-                                        source: $scope.parser.source
-                                    })
-                                    .success(function (d) {
-                                        account.notify.update({
-                                            text: 'Retrieved and saved ' + res.data.data.length + ' posts for a total of ' + account.allResultsLength + '. Checking for more results...'
-                                        });
-                                        getNextPage(res.data, account);
-                                    })
-                                    .error(function (d) {
-                                        console.log('fail', res);
-                                    });
+                                 //Recursive call
+                                getNextPage(res.data, allPosts);
+
                             } else {
                                 //Show error
                                 return cb('No data found in subsequent pages.');
+
+                                /**
+                                 * This is likely where we need to call a new function to loop
+                                 * through the posts and grab all comments...
+                                 */
                             }
                         });
                 } else {
@@ -165,7 +156,6 @@ $(document).ready(function () {
                     cb();
                 }
             }
-            //$http.get(response.paging.previous)
         });
     });
 
