@@ -107,7 +107,7 @@ $(document).ready(function () {
         };
 
         //Make the first request
-        FB.api('/' + fbid + '/posts', 'get', params, function (response) {
+        FB.api('/' + fbid + '/me/feed', 'get', params, function (response) {// /posts originally, but I think it should be /me/feed
             document.processingNotification = new PNotify({
                 title: 'Parsing',
                 text: 'Please wait while we process your request...',
@@ -128,6 +128,22 @@ $(document).ready(function () {
                 console.log(response);
 
                 return cb('There was a problem with the query parameters and no posts were found.');
+            }
+
+            function getComments(allPosts) {
+                async.each(allPosts, function (post, callback) {
+                    if (!post.id) {
+                        return callback();
+                    }
+                    FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
+                        var comments = [];
+                        res.data.forEach(function (comment) {
+                            comments.push(comment.message);
+                        });
+                        post.comments = comments;
+                        callback();
+                    });
+                });
             }
 
             function getNextPage(response, allPosts) {
