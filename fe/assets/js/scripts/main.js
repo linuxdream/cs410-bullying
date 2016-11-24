@@ -107,7 +107,7 @@ $(document).ready(function () {
         };
 
         //Make the first request
-        FB.api('/' + fbid + '/me/feed', 'get', params, function (response) {// /posts originally, but I think it should be /me/feed
+        FB.api('/me/feed', 'get', params, function (response) {// /posts originally, but I think this api no longer works
             document.processingNotification = new PNotify({
                 title: 'Parsing',
                 text: 'Please wait while we process your request...',
@@ -119,11 +119,13 @@ $(document).ready(function () {
                 return cb(response.error.message);
             }
 
+            var allPosts;
+
             if (response.data && response.data.length) {
-                var allPosts = response.data.data;
+                allPosts = response.data;
 
                 //Check for more pages..calls cb()
-                getNextPage(response, allPosts);
+                getNextPage(response, allPosts, getComments);
             } else {
                 console.log(response);
 
@@ -131,35 +133,37 @@ $(document).ready(function () {
             }
 
             function getComments(allPosts) {
-                async.each(allPosts, function (post, callback) {
-                    if (!post.id) {
-                        return callback();
-                    }
-                    FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
-                        var comments = [];
-                        res.data.forEach(function (comment) {
-                            comments.push(comment.message);
-                        });
-                        post.comments = comments;
-                        callback();
-                    });
-                });
+                // async.each(allPosts, function (post, callback) {
+                //     console.log(post)
+                //     if (!post.id) {
+                //         return callback();
+                //     }
+                //     FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
+                //         var comments = [];
+                //         console.log(res.data)
+                //         res.data.forEach(function (comment) {
+                //             comments.push(comment.message);
+                //         });
+                //         post.comments = comments;
+                //         callback();
+                //     });
+                // });
             }
 
-            function getNextPage(response, allPosts) {
+            function getNextPage(response, allPosts, cb) {
                 if (response && response.paging && response.paging.next) {
-                    $http.get(response.paging.next)
-                        .then(function (res) {
+                    FB.api(response.paging.next, 'get', {},
+                        function (res) {
                             //Save prev page data
                             if (res.data && res.data.data) {
                                 allPosts.concat(res.data.data)
 
                                  //Recursive call
-                                getNextPage(res.data, allPosts);
+                                getNextPage(res.data, allPosts, cb);
 
                             } else {
                                 //Show error
-                                return cb('No data found in subsequent pages.');
+                                return cb(allPosts, cb);
 
                                 /**
                                  * This is likely where we need to call a new function to loop
@@ -169,7 +173,7 @@ $(document).ready(function () {
                         });
                 } else {
                     //All done
-                    cb();
+                    cb(allPosts, cb);
                 }
             }
         });
