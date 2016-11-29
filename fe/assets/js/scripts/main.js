@@ -13,7 +13,7 @@ $( document )
         $.getScript( 'https://connect.facebook.net/en_US/sdk.js', function () {
             FB.init( {
                 //App ID for this project
-                appId: '1749237211996436',
+                appId: '204639986629939',
                 version: 'v2.8'
             } );
 
@@ -121,8 +121,8 @@ $( document )
                     var me;
                     FB.api( '/me', 'get', {}, function ( response ) {
                         me = response;
-                        console.log(me)
-                        //Make the first request
+                        console.log( me )
+                            //Make the first request
                         FB.api( '/me/feed', 'get', params, function ( response ) {
                             // /posts originally, but I think this api no longer works
                             document.processingNotification = new PNotify( {
@@ -135,54 +135,54 @@ $( document )
                             var allPosts = response.data;
 
                             if ( response.data && response.data.length ) {
-                                var allComments = [];
+                                var allComments = {
+                                    "comments": []
+                                };
 
                                 // response.data.forEach( function ( post ) {
                                 //     comments = _.merge( comments || [], _.map( post.comments.data, 'message' ) );
                                 // } );
 
                                 // get detail comments
-                                async.each(allPosts, function (post, callback) {
-                                    if (!post.id) {
-                                        return callback();
-                                    }
-                                    
-                                    FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
-                                        res.data.forEach(function (comment) {
-                                            if (!comment.from || !comment.from.id) {
-                                                return;
-                                            }
-                                            console.log(comment.from.id)
-                                            if (comment.from.id == me.id) {
-                                                return;
-                                            }
-                                            allComments.push(comment);
-                                        });
-                                        post.comments = res.data;
-                                        callback();
-                                    });
-                                },
-                                function () {
-                                    $.ajax( 'http://cs-410-project.com:1337/nlp/assess', {
-                                        method: 'post',
-                                        data: JSON.stringify( {
-                                            "comments": allComments
-                                        } ),
-                                        beforeSend: function ( xhr ) {
-                                            xhr.setRequestHeader( 'x-key', 'testtest' );
+                                async.each( allPosts, function ( post, callback ) {
+                                        if ( !post.id ) {
+                                            return callback();
                                         }
-                                    } )
-                                    .done( function ( data ) {
-                                        console.log( data );
+
+                                        FB.api( '/' + post.id + '/comments', 'get', {}, function ( res ) {
+                                            res.data.forEach( function ( comment ) {
+                                                if ( !comment.from || !comment.from.id ) {
+                                                    return;
+                                                }
+                                                // console.log( comment.from.id )
+                                                if ( comment.from.id == me.id ) {
+                                                    return;
+                                                }
+                                                allComments.comments.push( comment.message );
+                                            } );
+                                            post.comments = res.data;
+                                            callback();
+                                        } );
+                                    },
+                                    function () {
+                                        $.ajax( 'http://cs-410-project.com:8080/api/nlp/assess', {
+                                                method: 'post',
+                                                data: allComments,
+                                                beforeSend: function ( xhr ) {
+                                                    xhr.setRequestHeader( 'x-key', 'testtest' );
+                                                }
+                                            } )
+                                            .done( function ( data ) {
+                                                console.log( data );
+                                            } );
                                     } );
-                                });
-                                
+
                             } else {
                                 console.log( 'empty response', response );
 
                             }
                         } );
-                  });
+                    } );
                 } );
         } );
 
