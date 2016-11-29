@@ -1,224 +1,220 @@
-$(document).ready(function () {
-    //Setup caching
-    $.ajaxSetup({
-        cache: true
-    });
+$( document )
+    .ready( function () {
+        //Setup caching
+        $.ajaxSetup( {
+            cache: true
+        } );
 
-    /**
-     * Grab the Facebook SDK and attempt to login/auth. We need them logged in
-     * so that we can search FB as their account and access profiles that might
-     * otherwise be private but not to the current user.
-     */
-    $.getScript('https://connect.facebook.net/en_US/sdk.js', function () {
-        FB.init({
-            //App ID for this project
-            appId: '204639986629939',
-            version: 'v2.8'
-        });
+        /**
+         * Grab the Facebook SDK and attempt to login/auth. We need them logged in
+         * so that we can search FB as their account and access profiles that might
+         * otherwise be private but not to the current user.
+         */
+        $.getScript( 'https://connect.facebook.net/en_US/sdk.js', function () {
+            FB.init( {
+                //App ID for this project
+                appId: '204639986629939',
+                version: 'v2.8'
+            } );
 
-        $('#loginbutton,#feedbutton').removeAttr('disabled');
+            $( '#loginbutton,#feedbutton' )
+                .removeAttr( 'disabled' );
 
-        FB.getLoginStatus(function fbLoginCheck(response) {
-            if (response.status === 'connected') {
-                new PNotify({
-                    title: 'Success',
-                    text: 'Successfully connected to Facebook!',
-                    type: 'success'
-                });
+            FB.getLoginStatus( function fbLoginCheck( response ) {
+                if ( response.status === 'connected' ) {
+                    new PNotify( {
+                        title: 'Success',
+                        text: 'Successfully connected to Facebook!',
+                        type: 'success'
+                    } );
 
-                //Set the response to sessionStorage
-                sessionStorage.setItem('fbAccount', JSON.stringify(response));
+                    //Set the response to sessionStorage
+                    sessionStorage.setItem( 'fbAccount', JSON.stringify( response ) );
 
-                //Enable the serch bar
-                enableSearchBar();
-            } else {
-                FB.login(function fbLogin(response) {
-                    if (response.status === 'connected') {
-                        new PNotify({
-                            title: 'Success',
-                            text: 'Successfully connected to Facebook!',
-                            type: 'success'
-                        });
-
-                        //Set the response to sessionStorage
-                        sessionStorage.setItem('fbAccount', JSON.stringify(response));
-
-                        enableSearchBar();
-                    } else {
-                        new PNotify({
-                            title: 'Error',
-                            text: 'Could not connect to Facebook.',
-                            type: 'error'
-                        });
-                    }
-                }, {
-                    scope: ['email', 'user_posts']
-                });
-            }
-        });
-    });
-
-    //Bind the search bar to the FB search
-    $('#fbaccount').autocomplete({
-            source: function (request, response) {
-                searchFBAccounts(request.term, function (data) {
-                    console.log('fb seasrch data', data);
-                    response(data);
-                });
-            },
-            minLength: 3,
-            select: function (event, ui) {
-                $('.selected-account').empty();
-                $('.selected-account').append('<img src="' + ui.item.image + '"><br>' + ui.item.name);
-                $('#fbaccount').val(ui.item.name + ' - ' + ui.item.id);
-
-                return false;
-            }
-        })
-        .autocomplete("instance")
-        ._renderItem = function (ul, item) {
-            return $('<li>')
-                .append('<img src="' + item.image + '">' + item.name)
-                .appendTo(ul);
-        };
-
-    $('#analyze').on('click', function () {
-        //Get the account info
-        var fbid = $('#fbaccount').val().split(' - ')[1];
-        var requestFields = [
-            'id',
-            'created_time',
-            'description',
-            'from',
-            'link',
-            'message',
-            'name',
-            'story',
-            'to',
-            'type',
-            'comments.summary(1)',
-            'likes.summary(1)'
-        ];
-        var params = {
-            since: moment(moment().subtract(6, 'months'), 'YYYY-MM-DD hh:mm A').unix(),
-            until: moment(moment(), 'YYYY-MM-DD hh:mm A').unix(),
-            limit: 25,
-            fields: requestFields.join(',')
-        };
-
-        //Make the first request
-        FB.api('/me/feed', 'get', params, function (response) {// /posts originally, but I think this api no longer works
-            document.processingNotification = new PNotify({
-                title: 'Parsing',
-                text: 'Please wait while we process your request...',
-                type: 'warning',
-                hide: false
-            });
-
-            if (response.error) {
-                return cb(response.error.message);
-            }
-
-            var allPosts;
-
-            if (response.data && response.data.length) {
-                allPosts = response.data;
-
-                //Check for more pages..calls cb()
-                getNextPage(response, allPosts, getComments);
-            } else {
-                console.log(response);
-
-                return cb('There was a problem with the query parameters and no posts were found.');
-            }
-
-            function getComments(allPosts) {
-                // async.each(allPosts, function (post, callback) {
-                //     console.log(post)
-                //     if (!post.id) {
-                //         return callback();
-                //     }
-                //     FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
-                //         var comments = [];
-                //         console.log(res.data)
-                //         res.data.forEach(function (comment) {
-                //             comments.push(comment.message);
-                //         });
-                //         post.comments = comments;
-                //         callback();
-                //     });
-                // });
-            }
-
-            function getNextPage(response, allPosts, cb) {
-                if (response && response.paging && response.paging.next) {
-                    FB.api(response.paging.next, 'get', {},
-                        function (res) {
-                            //Save prev page data
-                            if (res.data && res.data.data) {
-                                allPosts.concat(res.data.data)
-
-                                 //Recursive call
-                                getNextPage(res.data, allPosts, cb);
-
-                            } else {
-                                //Show error
-                                return cb(allPosts, cb);
-
-                                /**
-                                 * This is likely where we need to call a new function to loop
-                                 * through the posts and grab all comments...
-                                 */
-                            }
-                        });
+                    //Enable the serch bar
+                    enableSearchBar();
                 } else {
-                    //All done
-                    cb(allPosts, cb);
+                    FB.login( function fbLogin( response ) {
+                        if ( response.status === 'connected' ) {
+                            new PNotify( {
+                                title: 'Success',
+                                text: 'Successfully connected to Facebook!',
+                                type: 'success'
+                            } );
+
+                            //Set the response to sessionStorage
+                            sessionStorage.setItem( 'fbAccount', JSON.stringify( response ) );
+
+                            enableSearchBar();
+                        } else {
+                            new PNotify( {
+                                title: 'Error',
+                                text: 'Could not connect to Facebook.',
+                                type: 'error'
+                            } );
+                        }
+                    }, {
+                        scope: [ 'email', 'user_posts' ]
+                    } );
                 }
-            }
-        });
-    });
+            } );
 
 
-    /**
-     * Helper functions
-     */
-    function enableSearchBar() {
-        $('#fbaccount').attr('disabled', false);
-    }
+            //Bind the search bar to the FB search
+            $( '#fbaccount' )
+                .autocomplete( {
+                    source: function ( request, response ) {
+                        searchFBAccounts( request.term, function ( data ) {
+                            console.log( 'fb seasrch data', data );
+                            response( data );
+                        } );
+                    },
+                    minLength: 3,
+                    select: function ( event, ui ) {
+                        $( '.selected-account' )
+                            .empty();
+                        $( '.selected-account' )
+                            .append( '<img src="' + ui.item.image + '"><br>' + ui.item.name );
+                        $( '#fbaccount' )
+                            .val( ui.item.name + ' - ' + ui.item.id );
 
-    function searchFBAccounts(searchString, cb) {
-        if (searchString && searchString.length > 2) {
-            FB.api('/search/', {
-                type: 'user',
-                limit: 30,
-                fields: 'id,name,picture,link',
-                q: searchString
-            }, function (response) {
-                if (_.has(response, 'error')) {
-                    new PNotify({
-                        title: 'Error',
-                        text: 'Cannot search Facebook using that query',
-                        type: 'error'
-                    });
-                    return [];
-                }
+                        return false;
+                    }
+                } )
+                .autocomplete( "instance" )
+                ._renderItem = function ( ul, item ) {
+                    return $( '<li>' )
+                        .append( '<img src="' + item.image + '">' + item.name )
+                        .appendTo( ul );
+                };
 
-                var cleanResponses = [];
+            $( '#analyze' )
+                .on( 'click', function () {
+                    //Get the account info
+                    var fbid = $( '#fbaccount' )
+                        .val()
+                        .split( ' - ' )[ 1 ];
+                    var requestFields = [
+                        'id',
+                        'created_time',
+                        // 'description',
+                        // 'from',
+                        // 'link',
+                        'message',
+                        // 'name',
+                        // 'story',
+                        // 'to',
+                        // 'type',
+                        'comments.summary(1)',
+                        // 'likes.summary(1)'
+                    ];
+                    var params = {
+                        since: moment( moment()
+                                .subtract( 6, 'years' ), 'YYYY-MM-DD hh:mm A' )
+                            .unix(),
+                        until: moment( moment(), 'YYYY-MM-DD hh:mm A' )
+                            .unix(),
+                        limit: 200,
+                        fields: requestFields.join( ',' )
+                    };
 
-                _.each(response.data, function (r) {
-                    // cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
-                    cleanResponses.push({
-                        image: r.picture.data.url,
-                        name: r.name,
-                        id: r.id
-                    })
-                });
+                    //Make the first request
+                    FB.api( '/me/feed', 'get', params, function ( response ) {
+                        // /posts originally, but I think this api no longer works
+                        document.processingNotification = new PNotify( {
+                            title: 'Parsing',
+                            text: 'Please wait while we process your request...',
+                            type: 'warning',
+                            hide: false
+                        } );
 
-                cb(cleanResponses);
-            });
-        } else {
-            return cb([]);
+                        var allPosts;
+
+                        if ( response.data && response.data.length ) {
+                            var comments = [];
+
+                            response.data.forEach( function ( post ) {
+                                comments = _.merge( comments || [], _.map( post.comments.data, 'message' ) );
+                            } );
+
+                            $.ajax( 'http://cs-410-project.com:1337/nlp/assess', {
+                                    method: 'post',
+                                    data: JSON.stringify( {
+                                        "comments": comments
+                                    } ),
+                                    beforeSend: function ( xhr ) {
+                                        xhr.setRequestHeader( 'x-key', 'testtest' );
+                                    }
+                                } )
+                                .done( function ( data ) {
+                                    console.log( data );
+                                } );
+                        } else {
+                            console.log( 'empty response', response );
+
+                        }
+
+                        function getComments( allPosts ) {
+                            // async.each(allPosts, function (post, callback) {
+                            //     console.log(post)
+                            //     if (!post.id) {
+                            //         return callback();
+                            //     }
+                            //     FB.api('/' + post.id + '/comments', 'get', {}, function (res) {
+                            //         var comments = [];
+                            //         console.log(res.data)
+                            //         res.data.forEach(function (comment) {
+                            //             comments.push(comment.message);
+                            //         });
+                            //         post.comments = comments;
+                            //         callback();
+                            //     });
+                            // });
+                        }
+                    } );
+                } );
+        } );
+
+        /**
+         * Helper functions
+         */
+        function enableSearchBar() {
+            $( '#fbaccount' )
+                .attr( 'disabled', false );
         }
-    }
-});
+
+        function searchFBAccounts( searchString, cb ) {
+            if ( searchString && searchString.length > 2 ) {
+                FB.api( '/search/', {
+                    type: 'user',
+                    limit: 30,
+                    fields: 'id,name,picture,link',
+                    q: searchString
+                }, function ( response ) {
+                    if ( _.has( response, 'error' ) ) {
+                        new PNotify( {
+                            title: 'Error',
+                            text: 'Cannot search Facebook using that query',
+                            type: 'error'
+                        } );
+                        return [];
+                    }
+
+                    var cleanResponses = [];
+
+                    _.each( response.data, function ( r ) {
+                        // cleanResponses.push({id: r, text: r.name + ', ' + location + ' - ' + r.link})
+                        cleanResponses.push( {
+                            image: r.picture.data.url,
+                            name: r.name,
+                            id: r.id
+                        } )
+                    } );
+
+                    cb( cleanResponses );
+                } );
+            } else {
+                return cb( [] );
+            }
+        }
+    } );
