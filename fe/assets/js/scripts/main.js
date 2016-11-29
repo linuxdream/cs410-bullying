@@ -165,11 +165,11 @@ $( document )
                                         } );
                                     },
                                     function () {
-                                        $.ajax( 'http://cs-410-project.com:8080/api/nlp/assess', {
+                                        $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/assess', {
                                                 method: 'post',
                                                 data: allComments,
                                                 beforeSend: function ( xhr ) {
-                                                    xhr.setRequestHeader( 'x-key', 'testtest' );
+                                                    xhr.setRequestHeader( 'x-key', '1234567890' );
                                                 }
                                             } )
                                             .done( function ( data ) {
