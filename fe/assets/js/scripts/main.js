@@ -164,7 +164,7 @@ $( document )
                                         } );
                                     },
                                     function () {
-                                        $.ajax( 'http://cs-410-project.com:1337/nlp/assess', {
+                                        $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/assess', {
                                                 method: 'put',
                                                 data: {comments: allComments.comments},
                                                 beforeSend: function ( xhr ) {
@@ -197,7 +197,7 @@ $( document )
                                                         } );
                                                     }
                                                     classifyControl.find('.yes').click(function () {
-                                                        $.ajax( 'http://cs-410-project.com:1337/nlp/classify', {
+                                                        $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/classify', {
                                                             method: 'put',
                                                             data: {comment: result.comment, isBully: true},
                                                             beforeSend: function ( xhr ) {
@@ -207,7 +207,7 @@ $( document )
                                                         .done(classifyCb);
                                                     });
                                                     classifyControl.find('.no').click(function () {
-                                                        $.ajax( 'http://cs-410-project.com:1337/nlp/classify', {
+                                                        $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/classify', {
                                                             method: 'put',
                                                             data: {comment: result.comment, isBully: false},
                                                             beforeSend: function ( xhr ) {
