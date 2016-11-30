@@ -19,8 +19,8 @@ $( document )
 
             $( '#loginbutton,#feedbutton' )
                 .removeAttr( 'disabled' );
-
-            FB.getLoginStatus( function fbLoginCheck( response ) {
+            
+            FB.getLoginStatus( function ( response ) {
                 if ( response.status === 'connected' ) {
                     new PNotify( {
                         title: 'Success',
@@ -35,6 +35,7 @@ $( document )
                     enableSearchBar();
                 } else {
                     FB.login( function fbLogin( response ) {
+                        
                         if ( response.status === 'connected' ) {
                             new PNotify( {
                                 title: 'Success',
@@ -58,7 +59,6 @@ $( document )
                     } );
                 }
             } );
-
 
             //Bind the search bar to the FB search
             $( '#fbaccount' )
@@ -121,8 +121,7 @@ $( document )
                     var me;
                     FB.api( '/me', 'get', {}, function ( response ) {
                         me = response;
-                        console.log( me )
-                            //Make the first request
+                        //Make the first request
                         FB.api( '/me/feed', 'get', params, function ( response ) {
                             // /posts originally, but I think this api no longer works
                             document.processingNotification = new PNotify( {
@@ -154,10 +153,10 @@ $( document )
                                                 if ( !comment.from || !comment.from.id ) {
                                                     return;
                                                 }
-                                                // console.log( comment.from.id )
-                                                if ( comment.from.id == me.id ) {
-                                                    return;
-                                                }
+                                                // if ( comment.from.id == me.id ) {
+                                                //     return;
+                                                // }
+                                                
                                                 allComments.comments.push( comment.message );
                                             } );
                                             post.comments = res.data;
@@ -165,9 +164,9 @@ $( document )
                                         } );
                                     },
                                     function () {
-                                        $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/assess', {
-                                                method: 'post',
-                                                data: allComments,
+                                        $.ajax( 'http://cs-410-project.com:1337/nlp/assess', {
+                                                method: 'put',
+                                                data: {comments: allComments.comments},
                                                 beforeSend: function ( xhr ) {
                                                     xhr.setRequestHeader( 'x-key', '1234567890' );
                                                 }
@@ -184,12 +183,42 @@ $( document )
                                                     if ( result.isBullying ) {
                                                         bullying = 'Y';
                                                     }
-
-                                                    $( '#results-tbody' )
-                                                        .append( '<tr><td>' + result.comment + '</td>' +
+                                                    var entry = $('<tr><td>' + result.comment + '</td>' +
                                                             '<td>' + bullying + '</td>' +
                                                             '<td>' + result.classifications[ 1 ].value + '</td>' +
-                                                            '</tr>' );
+                                                            
+                                                            '</tr>');
+                                                    var classifyControl = $('<td><a href="#" class="yes">Yes</a> <a href="#" class="no">No</a></td>');
+                                                    function classifyCb () {
+                                                        new PNotify( {
+                                                            title: 'Success',
+                                                            text: 'Thanks for your input.',
+                                                            type: 'success'
+                                                        } );
+                                                    }
+                                                    classifyControl.find('.yes').click(function () {
+                                                        $.ajax( 'http://cs-410-project.com:1337/nlp/classify', {
+                                                            method: 'put',
+                                                            data: {comment: result.comment, isBully: true},
+                                                            beforeSend: function ( xhr ) {
+                                                                xhr.setRequestHeader( 'x-key', '1234567890' );
+                                                            }
+                                                        } )
+                                                        .done(classifyCb);
+                                                    });
+                                                    classifyControl.find('.no').click(function () {
+                                                        $.ajax( 'http://cs-410-project.com:1337/nlp/classify', {
+                                                            method: 'put',
+                                                            data: {comment: result.comment, isBully: false},
+                                                            beforeSend: function ( xhr ) {
+                                                                xhr.setRequestHeader( 'x-key', '1234567890' );
+                                                            }
+                                                        } )
+                                                        .done(classifyCb);
+                                                    });
+                                                    entry.append(classifyControl);
+                                                    $( '#results-tbody' )
+                                                        .append( entry );
                                                 } );
 
                                                 $( '#results-container' )
