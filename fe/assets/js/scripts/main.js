@@ -165,7 +165,7 @@ $( document )
                                     },
                                     function () {
                                         $.ajax( 'http://cs410.i3dataconsulting.com/api/nlp/assess', {
-                                                method: 'put',
+                                                method: 'post',
                                                 data: {comments: allComments.comments},
                                                 beforeSend: function ( xhr ) {
                                                     xhr.setRequestHeader( 'x-key', '1234567890' );
