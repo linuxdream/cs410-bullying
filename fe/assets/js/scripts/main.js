@@ -110,7 +110,7 @@ $( document )
                     ];
                     var params = {
                         since: moment( moment()
-                                .subtract( 6, 'years' ), 'YYYY-MM-DD hh:mm A' )
+                                .subtract( 6, 'months' ), 'YYYY-MM-DD hh:mm A' )
                             .unix(),
                         until: moment( moment(), 'YYYY-MM-DD hh:mm A' )
                             .unix(),
@@ -173,7 +173,27 @@ $( document )
                                                 }
                                             } )
                                             .done( function ( data ) {
-                                                console.log( data );
+                                                $( '#results-total-comments' )
+                                                    .html( data.total );
+                                                $( '#results-total-bullying' )
+                                                    .html( data.totalBullying );
+
+                                                _.each( data.results, function ( result ) {
+                                                    var bullying = 'N';
+
+                                                    if ( result.isBullying ) {
+                                                        bullying = 'Y';
+                                                    }
+
+                                                    $( '#results-tbody' )
+                                                        .append( '<tr><td>' + result.comment + '</td>' +
+                                                            '<td>' + bullying + '</td>' +
+                                                            '<td>' + result.classifications[ 1 ].value + '</td>' +
+                                                            '</tr>' );
+                                                } );
+
+                                                $( '#results-container' )
+                                                    .show();
                                             } );
                                     } );
 

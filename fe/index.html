@@ -51,6 +51,35 @@
 						</form>
 						<hr />
 
+                        <div id="results-container" style="display: none;">
+                            <h2>Overall Results</h2>
+                            <div>
+                                <p>
+                                    Total comments: <span id="results-total-comments"></span><br>
+                                    Total marked as bullying: <span id="results-total-bullying"></span>
+                                </p>
+
+                            </div>
+
+                            <hr>
+
+                            <h2>Detailed Results</h2>
+                            <div>
+                                <table style="width: 100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Comment</th>
+                                            <th>Bullying?</th>
+                                            <th>P(Bullying)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="results-tbody">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
 						<footer>
 							<!-- <ul class="icons">
 								<li><a href="#" class="fa-twitter">Twitter</a></li>
