@@ -19,7 +19,7 @@ $( document )
 
             $( '#loginbutton,#feedbutton' )
                 .removeAttr( 'disabled' );
-            
+
             FB.getLoginStatus( function ( response ) {
                 if ( response.status === 'connected' ) {
                     new PNotify( {
@@ -35,7 +35,7 @@ $( document )
                     enableSearchBar();
                 } else {
                     FB.login( function fbLogin( response ) {
-                        
+
                         if ( response.status === 'connected' ) {
                             new PNotify( {
                                 title: 'Success',
@@ -110,7 +110,7 @@ $( document )
                     ];
                     var params = {
                         since: moment( moment()
-                                .subtract( 6, 'months' ), 'YYYY-MM-DD hh:mm A' )
+                                .subtract( 5, 'years' ), 'YYYY-MM-DD hh:mm A' )
                             .unix(),
                         until: moment( moment(), 'YYYY-MM-DD hh:mm A' )
                             .unix(),
@@ -156,7 +156,7 @@ $( document )
                                                 // if ( comment.from.id == me.id ) {
                                                 //     return;
                                                 // }
-                                                
+
                                                 allComments.comments.push( comment.message );
                                             } );
                                             post.comments = res.data;
@@ -186,7 +186,7 @@ $( document )
                                                     var entry = $('<tr><td>' + result.comment + '</td>' +
                                                             '<td>' + bullying + '</td>' +
                                                             '<td>' + result.classifications[ 1 ].value + '</td>' +
-                                                            
+
                                                             '</tr>');
                                                     var classifyControl = $('<td><a href="#" class="yes">Yes</a> <a href="#" class="no">No</a></td>');
                                                     function classifyCb () {
