@@ -14,7 +14,7 @@ module.exports = {
      * We are expecting an array of documents. Make sure they have passed that
      */
     let comments = _.get( req, 'body.comments', false );
-    console.log( req.body );
+
     //Make sure they passed actual data
     if ( comments && _.isArray( comments ) && comments.length ) {
       //Prep the stemmer
@@ -39,7 +39,7 @@ module.exports = {
 
         //Loop through the comments
         async.each( comments, function ( comment, callback ) {
-          tokenizedComment = Natural.PorterStemmer.tokenizeAndStem( comment );
+          tokenizedComment = Natural.PorterStemmer.tokenizeAndStem( comment.replace(/[^a-zA-Z0-9 -]/, '') );
 
           let res = false;
           if ( classifier.classify( tokenizedComment ) === 'bullying' ) {
@@ -83,9 +83,9 @@ module.exports = {
       }
 
       if ( req.body.isBully ) {
-        classifier.addDocument( Natural.PorterStemmer.tokenizeAndStem( req.body.comment ), 'bullying' );
+        classifier.addDocument( Natural.PorterStemmer.tokenizeAndStem( req.body.comment.replace(/[^a-zA-Z0-9 -]/, '') ), 'bullying' );
       } else {
-        classifier.addDocument( Natural.PorterStemmer.tokenizeAndStem( req.body.comment ), 'non-bullying' );
+        classifier.addDocument( Natural.PorterStemmer.tokenizeAndStem( req.body.comment.replace(/[^a-zA-Z0-9 -]/, '') ), 'non-bullying' );
       }
 
       // persist to disk

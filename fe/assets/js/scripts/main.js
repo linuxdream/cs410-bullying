@@ -121,6 +121,7 @@ $( document )
                     var me;
                     FB.api( '/me', 'get', {}, function ( response ) {
                         me = response;
+                        console.log(response);
                         //Make the first request
                         FB.api( '/me/feed', 'get', params, function ( response ) {
                             // /posts originally, but I think this api no longer works
@@ -180,12 +181,21 @@ $( document )
                                                 _.each( data.results, function ( result ) {
                                                     var bullying = 'N';
 
-                                                    if ( result.isBullying ) {
+                                                    if ( result.isBully ) {
                                                         bullying = 'Y';
                                                     }
+
+                                                    var bProbability = null;
+
+                                                    _.each(result.classifications, function(r){
+                                                        if(r.label === "bullying"){
+                                                            bProbability = r.value;
+                                                        }
+                                                    })
+
                                                     var entry = $('<tr><td>' + result.comment + '</td>' +
                                                             '<td>' + bullying + '</td>' +
-                                                            '<td>' + result.classifications[ 1 ].value + '</td>' +
+                                                            '<td>' + bProbability + '</td>' +
 
                                                             '</tr>');
                                                     var classifyControl = $('<td><a href="#" class="yes">Yes</a> <a href="#" class="no">No</a></td>');
@@ -220,6 +230,8 @@ $( document )
                                                     $( '#results-tbody' )
                                                         .append( entry );
                                                 } );
+
+                                                PNotify.removeAll();
 
                                                 $( '#results-container' )
                                                     .show();
